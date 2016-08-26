@@ -64,7 +64,7 @@ unsigned long get_milliseconds()
 
 struct profile_node
 {
-	char name[256];
+	char name[PROFILE_NODES_MAX];
 	int level;
 	uint64_t total_cycles;
 };
