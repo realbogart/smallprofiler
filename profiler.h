@@ -6,7 +6,7 @@
 *	of your cpu for PROFILER_MEASURE_MILLISECONDS milliseconds. This measurement is
 *	later used to convert the total cycle count to seconds.
 *
-*	Use PROFILE_START(name) to start the profiler and PROFILE_STOP(name) to stop.
+*	Use PROFILER_START(name) to start the profiler and PROFILER_STOP(name) to stop.
 *	
 *	Several start/stop calls can be nestled and the time for all blocks with the
 *	same name are combined.
@@ -122,18 +122,18 @@ void profiler_dump()
 }
 
 #ifdef PROFILER_DISABLE
-#define PROFILE_START(NAME)
-#define PROFILE_STOP(NAME)
+#define PROFILER_START(NAME)
+#define PROFILER_STOP(NAME)
 #else
 
-#define PROFILE_START(NAME) \
+#define PROFILER_START(NAME) \
 	static int __profile_id_##NAME = __COUNTER__; \
 	strcpy_s(profile_nodes[__profile_id_##NAME].name, strlen(#NAME)+1, #NAME); \
 	profile_nodes[__profile_id_##NAME].level = profile_nodes_level; \
 	profile_nodes_level++; \
 	uint64_t __profile_start_##NAME = get_cycles(); \
 
-#define PROFILE_STOP(NAME) \
+#define PROFILER_STOP(NAME) \
 	profile_nodes[__profile_id_##NAME].total_cycles += get_cycles() - __profile_start_##NAME; \
 	profile_nodes_level--; \
 
