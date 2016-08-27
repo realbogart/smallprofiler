@@ -75,6 +75,10 @@ int profile_nodes_level = 0;
 static uint64_t profiler_cycles_measure = 0;
 #endif
 
+#ifndef PROFILER_DISABLE
+char buffer[PROFILE_BUFFER_SIZE];
+#endif
+
 void profiler_initialize()
 {
 #ifndef PROFILER_DISABLE
@@ -95,14 +99,10 @@ void profiler_initialize()
 #endif
 }
 
-void profiler_dump()
+void profiler_get_results(char* buffer)
 {
 #ifndef PROFILER_DISABLE
-	char buffer[PROFILE_BUFFER_SIZE];
-
-	sprintf(buffer, "Profiler results\n");
-	sprintf(buffer + strlen(buffer), "----------------\n");
-
+	sprintf(buffer, "");
 	for (int i = 0; i < PROFILE_NODES_MAX; i++)
 	{
 		if (strlen(profile_nodes[i].name) == 0)
@@ -114,10 +114,24 @@ void profiler_dump()
 		float seconds = (float)profile_nodes[i].total_cycles / (float)profiler_cycles_measure;
 		sprintf(buffer + strlen(buffer), "%s (%f)\n", profile_nodes[i].name, seconds);
 	}
+#endif
+}
 
+void profiler_dump()
+{
+#ifndef PROFILER_DISABLE
+	profiler_get_results(buffer);
 	FILE* file = fopen(PROFILER_LOG_NAME, "w");
 	fputs(buffer, file);
 	fclose(file);
+#endif
+}
+
+void profiler_dump_console()
+{
+#ifndef PROFILER_DISABLE
+	profiler_get_results(buffer);
+	printf("%s", buffer);
 #endif
 }
 
