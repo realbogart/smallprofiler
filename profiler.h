@@ -33,6 +33,7 @@
 #include <stdio.h>
 
 #define PROFILE_NODES_MAX 256
+#define PROFILE_NAME_MAXLEN 256
 #define PROFILE_BUFFER_SIZE 16384
 #define PROFILER_MEASURE_MILLISECONDS 1000
 #define PROFILER_LOG_NAME "profiler.txt"
@@ -64,7 +65,7 @@ unsigned long get_milliseconds()
 
 struct profile_node
 {
-	char name[PROFILE_NODES_MAX];
+	char name[PROFILE_NAME_MAXLEN];
 	int level;
 	uint64_t total_cycles;
 };
@@ -109,17 +110,24 @@ void profiler_initialize()
 void profiler_get_results(char* buffer)
 {
 #ifndef PROFILER_DISABLE
-	sprintf(buffer, "");
+	char buffer_name[PROFILE_NAME_MAXLEN];
+
+	sprintf(buffer, "%-40s%s  : %s\n", "Name", "Seconds", "CPU Cycles");
+	sprintf(buffer + strlen(buffer), "--------------------------------------------------------------\n");
+
 	for (int i = 0; i < PROFILE_NODES_MAX; i++)
 	{
 		if (strlen(profile_nodes[i].name) == 0)
 			break;
 
+		strcpy_s(buffer_name, 1, "");
 		for (int j = 0; j < profile_nodes[i].level; j++)
-			sprintf(buffer + strlen(buffer), "\t");
+			strcat(buffer_name, "    ");
+
+		strcat(buffer_name, profile_nodes[i].name);
 
 		float seconds = (float)profile_nodes[i].total_cycles / (float)profiler_cycles_measure;
-		sprintf(buffer + strlen(buffer), "%s (%f)\n", profile_nodes[i].name, seconds);
+		sprintf(buffer + strlen(buffer), "%-40s%f : %" PRIu64 "\n", buffer_name, seconds, profile_nodes[i].total_cycles);
 	}
 #endif
 }
