@@ -79,7 +79,7 @@ static uint64_t profiler_cycles_measure = 0;
 char buffer[PROFILE_BUFFER_SIZE];
 #endif
 
-void profiler_initialize()
+void profiler_reset()
 {
 #ifndef PROFILER_DISABLE
 	for (int i = 0; i < PROFILE_NODES_MAX; i++)
@@ -88,6 +88,13 @@ void profiler_initialize()
 		profile_nodes[i].level = 0;
 		strcpy_s(profile_nodes[i].name, 1, "");
 	}
+#endif
+}
+
+void profiler_initialize()
+{
+#ifndef PROFILER_DISABLE
+	profiler_reset();
 
 	unsigned long milliseconds = get_milliseconds();
 	uint64_t cycles_start = get_cycles();
