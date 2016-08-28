@@ -2,6 +2,11 @@
 * This is a single header, cross-platform profiler
 *
 * Usage: 
+*
+*	#define PROFILER_DEFINE
+*	#include "profiler.h"
+*
+*
 *	call profiler_initialize() on startup. This function will measure the performance
 *	of your cpu for PROFILER_MEASURE_MILLISECONDS milliseconds. This measurement is
 *	later used to convert the total cycle count to seconds.
@@ -11,8 +16,8 @@
 *	Several start/stop calls can be nestled and the time for all blocks with the
 *	same name are combined.
 *
-*	Call profiler_dump() to dump a performace log with name PROFILER_LOG_NAME to
-*	a file. Default is profiler.txt
+*	Call profiler_dump_file(const char* filename) to dump a performace log to file
+*	Call profiler_dump_console(const char* filename) to dump a performace log to console
 *
 *	You can define PROFILER_DISABLE to disable all macros and functions to remove
 *	all profiler overhead.
@@ -37,17 +42,22 @@
 #define PROFILER_BUFFER_SIZE 16384
 #define PROFILER_MEASURE_MILLISECONDS 100
 #define PROFILER_MEASURE_SECONDS ((float)PROFILER_MEASURE_MILLISECONDS / 1000.0f)
-#define PROFILER_LOG_NAME "profiler.txt"
+
+void profiler_initialize();
+void profiler_reset();
+void profiler_get_results(char* buffer);
+void profiler_dump_file(const char* filename);
+void profiler_dump_console();
 
 #ifndef PROFILER_DISABLE
 #ifdef _WIN32
 #include <Windows.h>
 #include <intrin.h>
-uint64_t get_cycles()
+static uint64_t get_cycles()
 {
 	return __rdtsc();
 }
-unsigned long get_milliseconds()
+static unsigned long get_milliseconds()
 {
 	LARGE_INTEGER timestamp;
 	LARGE_INTEGER frequency;
@@ -73,6 +83,7 @@ unsigned long get_milliseconds()
 	return milliseconds;
 }
 #endif
+#endif
 
 struct profiler_node
 {
@@ -81,30 +92,12 @@ struct profiler_node
 	uint64_t total_cycles;
 };
 
+#ifdef PROFILER_DEFINE
+int profiler_current_parent = -1;
+static uint64_t profiler_cycles_measure = 0;
 struct profiler_node profiler_nodes[PROFILER_NODES_MAX];
 
-int profiler_nodes_level = 0;
-int profiler_current_parent = -1;
-
-static uint64_t profiler_cycles_measure = 0;
-#endif
-
-#ifndef PROFILER_DISABLE
 char buffer[PROFILER_BUFFER_SIZE];
-#endif
-
-void profiler_reset()
-{
-#ifndef PROFILER_DISABLE
-	int i;
-	for (i = 0; i < PROFILER_NODES_MAX; i++)
-	{
-		profiler_nodes[i].total_cycles = 0;
-		profiler_nodes[i].parent_id = -1;
-		strncpy(profiler_nodes[i].name, "", 1);
-	}
-#endif
-}
 
 void profiler_initialize()
 {
@@ -121,7 +114,30 @@ void profiler_initialize()
 #endif
 }
 
-void profiler_get_results_sorted(char* buffer, int parent_id, int level)
+void profiler_reset()
+{
+#ifndef PROFILER_DISABLE
+	int i;
+	for (i = 0; i < PROFILER_NODES_MAX; i++)
+	{
+		profiler_nodes[i].total_cycles = 0;
+		profiler_nodes[i].parent_id = -1;
+		strncpy(profiler_nodes[i].name, "", 1);
+	}
+#endif
+}
+
+void profiler_dump_file(const char* filename)
+{
+#ifndef PROFILER_DISABLE
+	profiler_get_results(buffer);
+	FILE* file = fopen(filename, "w");
+	fputs(buffer, file);
+	fclose(file);
+#endif
+}
+
+static void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 {
 #ifndef PROFILER_DISABLE
 	char buffer_name[PROFILER_NAME_MAXLEN];
@@ -153,7 +169,7 @@ void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 		if (max_index != -1)
 		{
 			strncpy(buffer_name, "", 1);
-			
+
 			int j;
 			for (j = 0; j < level; j++)
 				strcat(buffer_name, "    ");
@@ -181,16 +197,6 @@ void profiler_get_results(char* buffer)
 #endif
 }
 
-void profiler_dump()
-{
-#ifndef PROFILER_DISABLE
-	profiler_get_results(buffer);
-	FILE* file = fopen(PROFILER_LOG_NAME, "w");
-	fputs(buffer, file);
-	fclose(file);
-#endif
-}
-
 void profiler_dump_console()
 {
 #ifndef PROFILER_DISABLE
@@ -198,6 +204,12 @@ void profiler_dump_console()
 	printf("%s", buffer);
 #endif
 }
+
+#else
+extern int profiler_current_parent;
+extern uint64_t profiler_cycles_measure;
+extern profiler_node profiler_nodes[PROFILER_NODES_MAX];
+#endif
 
 #ifdef PROFILER_DISABLE
 #define PROFILER_START(NAME)
