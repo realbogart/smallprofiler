@@ -51,6 +51,7 @@ unsigned long get_milliseconds()
 	return GetTickCount();
 }
 #else
+#include <sys/time.h>
 uint64_t get_cycles()
 {
 	unsigned int lo, hi;
@@ -59,7 +60,10 @@ uint64_t get_cycles()
 }
 unsigned long get_milliseconds()
 {
-	return 1; // TODO: Implement this
+	struct timeval time; 
+	gettimeofday(&time, NULL);
+	unsigned long milliseconds = time.tv_sec * 1000LL + time.tv_usec / 1000;
+	return milliseconds;
 }
 #endif
 
