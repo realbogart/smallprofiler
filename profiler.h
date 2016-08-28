@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 
 #define PROFILER_NODES_MAX 256
 #define PROFILER_NAME_MAXLEN 256
@@ -54,7 +55,7 @@ unsigned long get_milliseconds()
 uint64_t get_cycles()
 {
 	unsigned int lo, hi;
-	__asm__ __volatile__("rdtsc" : "=a" (lo), "=d" (hi));
+	__asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
 	return ((uint64_t)hi << 32) | lo;
 }
 unsigned long get_milliseconds()
@@ -86,7 +87,8 @@ char buffer[PROFILER_BUFFER_SIZE];
 void profiler_reset()
 {
 #ifndef PROFILER_DISABLE
-	for (int i = 0; i < PROFILER_NODES_MAX; i++)
+	int i;
+	for (i = 0; i < PROFILER_NODES_MAX; i++)
 	{
 		profiler_nodes[i].total_cycles = 0;
 		profiler_nodes[i].parent_id = -1;
@@ -117,11 +119,14 @@ void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 
 	uint64_t max_cycles_ceil = UINT64_MAX;
 
-	for (int i = 0; i < PROFILER_NODES_MAX; i++)
+	int i;
+	for (i = 0; i < PROFILER_NODES_MAX; i++)
 	{
 		uint64_t max_cycles = 0;
 		int max_index = -1;
-		for (int j = 0; j < PROFILER_NODES_MAX; j++)
+
+		int j;
+		for (j = 0; j < PROFILER_NODES_MAX; j++)
 		{
 			if (profiler_nodes[j].parent_id == parent_id)
 			{
@@ -139,7 +144,9 @@ void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 		if (max_index != -1)
 		{
 			strcpy_s(buffer_name, 1, "");
-			for (int j = 0; j < level; j++)
+			
+			int j;
+			for (j = 0; j < level; j++)
 				strcat(buffer_name, "    ");
 
 			strcat(buffer_name, profiler_nodes[max_index].name);
@@ -206,3 +213,4 @@ void profiler_dump_console()
 #endif
 
 #endif //_PROFILER_
+
