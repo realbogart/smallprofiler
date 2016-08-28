@@ -43,11 +43,25 @@
 #define PROFILER_MEASURE_MILLISECONDS 100
 #define PROFILER_MEASURE_SECONDS ((float)PROFILER_MEASURE_MILLISECONDS / 1000.0f)
 
-void profiler_initialize();
-void profiler_reset();
-void profiler_get_results(char* buffer);
-void profiler_dump_file(const char* filename);
-void profiler_dump_console();
+#ifdef PROFILER_DISABLE
+#define profiler_initialize()
+#define profiler_reset()
+#define profiler_get_results(buffer)
+#define profiler_dump_file(filename)
+#define profiler_dump_console()
+#else
+void _profiler_initialize();
+void _profiler_reset();
+void _profiler_get_results(char* buffer);
+void _profiler_dump_file(const char* filename);
+void _profiler_dump_console();
+
+#define profiler_initialize()			_profiler_initialize();
+#define profiler_reset()				_profiler_reset();
+#define profiler_get_results(buffer)	_profiler_get_results(buffer);
+#define profiler_dump_file(filename)	_profiler_dump_file(filename);
+#define profiler_dump_console()			_profiler_dump_console();
+#endif // PROFILER_DISABLE
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -97,9 +111,8 @@ struct profiler_node profiler_nodes[PROFILER_NODES_MAX];
 
 char buffer[PROFILER_BUFFER_SIZE];
 
-void profiler_initialize()
+void _profiler_initialize()
 {
-#ifndef PROFILER_DISABLE
 	profiler_reset();
 
 	unsigned long milliseconds = get_milliseconds();
@@ -109,12 +122,10 @@ void profiler_initialize()
 		;
 
 	profiler_cycles_measure = get_cycles() - cycles_start;
-#endif
 }
 
-void profiler_reset()
+void _profiler_reset()
 {
-#ifndef PROFILER_DISABLE
 	int i;
 	for (i = 0; i < PROFILER_NODES_MAX; i++)
 	{
@@ -122,22 +133,18 @@ void profiler_reset()
 		profiler_nodes[i].parent_id = -1;
 		strncpy(profiler_nodes[i].name, "", 1);
 	}
-#endif
 }
 
-void profiler_dump_file(const char* filename)
+void _profiler_dump_file(const char* filename)
 {
-#ifndef PROFILER_DISABLE
 	profiler_get_results(buffer);
 	FILE* file = fopen(filename, "w");
 	fputs(buffer, file);
 	fclose(file);
-#endif
 }
 
 static void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 {
-#ifndef PROFILER_DISABLE
 	char buffer_name[PROFILER_NAME_MAXLEN];
 
 	uint64_t max_cycles_ceil = UINT64_MAX;
@@ -183,24 +190,19 @@ static void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 			return;
 		}
 	}
-#endif
 }
 
-void profiler_get_results(char* buffer)
+void _profiler_get_results(char* buffer)
 {
-#ifndef PROFILER_DISABLE
 	sprintf(buffer, "%-40s%s  : %s\n", "Name", "Seconds", "CPU Cycles");
 	sprintf(buffer + strlen(buffer), "-------------------------------------------------------------\n");
 	profiler_get_results_sorted(buffer, -1, 0);
-#endif
 }
 
-void profiler_dump_console()
+void _profiler_dump_console()
 {
-#ifndef PROFILER_DISABLE
 	profiler_get_results(buffer);
 	printf("%s", buffer);
-#endif
 }
 
 #else
