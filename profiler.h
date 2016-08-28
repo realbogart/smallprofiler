@@ -55,7 +55,7 @@ unsigned long get_milliseconds()
 	QueryPerformanceCounter(&timestamp);
 	QueryPerformanceFrequency(&frequency);
 
-	return timestamp.QuadPart / (frequency.QuadPart / 1000);
+	return (unsigned long)(timestamp.QuadPart / (frequency.QuadPart / 1000));
 }
 #else
 #include <sys/time.h>
@@ -77,7 +77,6 @@ unsigned long get_milliseconds()
 struct profiler_node
 {
 	char name[PROFILER_NAME_MAXLEN];
-	int level;
 	int parent_id;
 	uint64_t total_cycles;
 };
@@ -219,4 +218,3 @@ void profiler_dump_console()
 #endif
 
 #endif //_PROFILER_
-
