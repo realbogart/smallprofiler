@@ -52,11 +52,11 @@ void _profiler_dump_file(const char* filename);
 void _profiler_dump_console();
 void _profiler_strncpy(char* dst, const char* src, size_t size);
 
-#define profiler_initialize()			_profiler_initialize();
-#define profiler_reset()				_profiler_reset();
-#define profiler_get_results(buffer)	_profiler_get_results(buffer);
-#define profiler_dump_file(filename)	_profiler_dump_file(filename);
-#define profiler_dump_console()			_profiler_dump_console();
+#define profiler_initialize()			_profiler_initialize()
+#define profiler_reset()				_profiler_reset()
+#define profiler_get_results(buffer)	_profiler_get_results(buffer)
+#define profiler_dump_file(filename)	_profiler_dump_file(filename)
+#define profiler_dump_console()			_profiler_dump_console()
 #endif // PROFILER_DISABLE
 
 #ifdef _WIN32
