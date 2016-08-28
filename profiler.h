@@ -35,7 +35,8 @@
 #define PROFILER_NODES_MAX 256
 #define PROFILER_NAME_MAXLEN 256
 #define PROFILER_BUFFER_SIZE 16384
-#define PROFILER_MEASURE_MILLISECONDS 1000
+#define PROFILER_MEASURE_MILLISECONDS 100
+#define PROFILER_MEASURE_SECONDS ((float)PROFILER_MEASURE_MILLISECONDS / 1000.0f)
 #define PROFILER_LOG_NAME "profiler.txt"
 
 #ifndef PROFILER_DISABLE
@@ -48,7 +49,13 @@ uint64_t get_cycles()
 }
 unsigned long get_milliseconds()
 {
-	return GetTickCount();
+	LARGE_INTEGER timestamp;
+	LARGE_INTEGER frequency;
+
+	QueryPerformanceCounter(&timestamp);
+	QueryPerformanceFrequency(&frequency);
+
+	return timestamp.QuadPart / (frequency.QuadPart / 1000);
 }
 #else
 #include <sys/time.h>
@@ -154,7 +161,7 @@ void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 
 			strcat(buffer_name, profiler_nodes[max_index].name);
 
-			float seconds = (float)profiler_nodes[max_index].total_cycles / (float)profiler_cycles_measure;
+			float seconds = (float)profiler_nodes[max_index].total_cycles / ((float)profiler_cycles_measure / PROFILER_MEASURE_SECONDS);
 			sprintf(buffer + strlen(buffer), "%-40s%f : %" PRIu64 "\n", buffer_name, seconds, profiler_nodes[max_index].total_cycles);
 			profiler_get_results_sorted(buffer, max_index, level + 1);
 		}
