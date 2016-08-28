@@ -24,8 +24,7 @@
 #define _PROFILER_
 
 #ifdef _WIN32
-#pragma warning( push )
-#pragma warning(disable:4996)
+#pragma warning(disable: 4996)
 #endif
 
 #include <stdint.h>
@@ -92,7 +91,7 @@ void profiler_reset()
 	{
 		profiler_nodes[i].total_cycles = 0;
 		profiler_nodes[i].parent_id = -1;
-		strcpy_s(profiler_nodes[i].name, 1, "");
+		strncpy(profiler_nodes[i].name, "", 1);
 	}
 #endif
 }
@@ -143,7 +142,7 @@ void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 
 		if (max_index != -1)
 		{
-			strcpy_s(buffer_name, 1, "");
+			strncpy(buffer_name, "", 1);
 			
 			int j;
 			for (j = 0; j < level; j++)
@@ -197,7 +196,7 @@ void profiler_dump_console()
 
 #define PROFILER_START(NAME) \
 	static int __profiler_id_##NAME = __COUNTER__; \
-	strcpy_s(profiler_nodes[__profiler_id_##NAME].name, strlen(#NAME)+1, #NAME); \
+	strncpy(profiler_nodes[__profiler_id_##NAME].name, #NAME, strlen(#NAME)+1); \
 	profiler_nodes[__profiler_id_##NAME].parent_id = profiler_current_parent; \
 	profiler_current_parent = __profiler_id_##NAME; \
 	uint64_t __profiler_start_##NAME = get_cycles(); \
@@ -206,10 +205,6 @@ void profiler_dump_console()
 	profiler_nodes[__profiler_id_##NAME].total_cycles += get_cycles() - __profiler_start_##NAME; \
 	profiler_current_parent = profiler_nodes[__profiler_id_##NAME].parent_id; \
 
-#endif
-
-#ifdef _WIN32
-#pragma warning( pop )
 #endif
 
 #endif //_PROFILER_
