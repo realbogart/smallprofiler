@@ -49,7 +49,6 @@ void profiler_get_results(char* buffer);
 void profiler_dump_file(const char* filename);
 void profiler_dump_console();
 
-#ifndef PROFILER_DISABLE
 #ifdef _WIN32
 #include <Windows.h>
 #include <intrin.h>
@@ -69,20 +68,19 @@ static unsigned long get_milliseconds()
 }
 #else
 #include <sys/time.h>
-uint64_t get_cycles()
+static uint64_t get_cycles()
 {
 	unsigned int lo, hi;
 	__asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
 	return ((uint64_t)hi << 32) | lo;
 }
-unsigned long get_milliseconds()
+static unsigned long get_milliseconds()
 {
 	struct timeval time; 
 	gettimeofday(&time, NULL);
 	unsigned long milliseconds = time.tv_sec * 1000LL + time.tv_usec / 1000;
 	return milliseconds;
 }
-#endif
 #endif
 
 struct profiler_node
