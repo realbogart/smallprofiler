@@ -101,6 +101,7 @@ struct profiler_node
 };
 
 #ifdef PROFILER_DEFINE
+int profiler_current_id = 0;
 int profiler_current_parent = -1;
 static uint64_t profiler_cycles_measure = 0;
 struct profiler_node profiler_nodes[PROFILER_NODES_MAX];
@@ -216,6 +217,7 @@ void _profiler_strncpy(char* dst, const char* src, size_t size)
 #endif
 
 #else
+extern int profiler_current_id;
 extern int profiler_current_parent;
 extern uint64_t profiler_cycles_measure;
 extern profiler_node profiler_nodes[PROFILER_NODES_MAX];
@@ -226,8 +228,14 @@ extern profiler_node profiler_nodes[PROFILER_NODES_MAX];
 #define PROFILER_STOP(NAME)
 #else
 
+#ifdef __cplusplus
+#define PROFILER_CREATE_ID profiler_current_id++
+#else
+#define PROFILER_CREATE_ID __COUNTER__
+#endif
+
 #define PROFILER_START(NAME) \
-	static int __profiler_id_##NAME = __COUNTER__; \
+	static int __profiler_id_##NAME = PROFILER_CREATE_ID; \
 	_profiler_strncpy(profiler_nodes[__profiler_id_##NAME].name, #NAME, strlen(#NAME)+1); \
 	profiler_nodes[__profiler_id_##NAME].parent_id = profiler_current_parent; \
 	profiler_current_parent = __profiler_id_##NAME; \
