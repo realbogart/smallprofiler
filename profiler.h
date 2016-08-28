@@ -103,10 +103,10 @@ struct profiler_node
 #ifdef PROFILER_DEFINE
 int profiler_current_id = 0;
 int profiler_current_parent = -1;
-static uint64_t profiler_cycles_measure = 0;
 struct profiler_node profiler_nodes[PROFILER_NODES_MAX];
 
-char buffer[PROFILER_BUFFER_SIZE];
+static uint64_t profiler_cycles_measure = 0;
+static char buffer[PROFILER_BUFFER_SIZE];
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -221,7 +221,7 @@ extern int profiler_current_id;
 extern int profiler_current_parent;
 extern uint64_t profiler_cycles_measure;
 extern profiler_node profiler_nodes[PROFILER_NODES_MAX];
-#endif
+#endif // PROFILER_DEFINE
 
 #ifdef PROFILER_DISABLE
 #define PROFILER_START(NAME)
