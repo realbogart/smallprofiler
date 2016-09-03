@@ -147,7 +147,7 @@ void _profiler_dump_file(const char* filename)
 	fclose(file);
 }
 
-static void profiler_get_results_sorted(char* buffer, int parent_id, int level)
+static void profiler_get_results_sorted(char* buffer, int parent_id, float seconds_total, int level)
 {
 	char buffer_name[PROFILER_NAME_MAXLEN];
 
@@ -185,9 +185,32 @@ static void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 
 			strcat(buffer_name, profiler_nodes[max_index].name);
 
+			int parent_id = profiler_nodes[max_index].parent_id;
 			float seconds = (float)profiler_nodes[max_index].total_cycles / ((float)profiler_cycles_measure / PROFILER_MEASURE_SECONDS);
-			sprintf(buffer + strlen(buffer), "%-40s%f : %" PRIu64 "\n", buffer_name, seconds, profiler_nodes[max_index].total_cycles);
-			profiler_get_results_sorted(buffer, max_index, level + 1);
+			float seconds_parent = 0.0f;
+
+			if (parent_id == -1)
+			{
+				seconds_parent = seconds;
+				seconds_total = seconds;
+			}
+			else
+			{
+				seconds_parent = (float)profiler_nodes[parent_id].total_cycles / ((float)profiler_cycles_measure / PROFILER_MEASURE_SECONDS);
+			}
+
+			float percent_total = 100.0f * (seconds / seconds_total);
+			float percent_local = 100.0f * (seconds / seconds_parent);
+
+			sprintf(buffer + strlen(buffer), 
+					"%-40s%-7.2f : %-7.2f : %f : %" PRIu64 "\n", 
+					buffer_name,
+					percent_total,
+					percent_local,
+					seconds, 
+					profiler_nodes[max_index].total_cycles);
+
+			profiler_get_results_sorted(buffer, max_index, seconds_total, level + 1);
 		}
 		else
 		{
@@ -198,9 +221,16 @@ static void profiler_get_results_sorted(char* buffer, int parent_id, int level)
 
 void _profiler_get_results(char* buffer)
 {
-	sprintf(buffer, "%-40s%s  : %s\n", "Name", "Seconds", "CPU Cycles");
-	sprintf(buffer + strlen(buffer), "-------------------------------------------------------------\n");
-	profiler_get_results_sorted(buffer, -1, 0);
+	sprintf(buffer, 
+			"%-40s%s : %s : %-8s : %s\n", 
+			"Name",
+			"\%-total",
+			"\%-local",
+			"Seconds", 
+			"CPU Cycles");
+
+	sprintf(buffer + strlen(buffer), "----------------------------------------------------------------------------------\n");
+	profiler_get_results_sorted(buffer, -1, 0.0f, 0);
 }
 
 void _profiler_dump_console()
