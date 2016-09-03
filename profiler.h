@@ -50,7 +50,7 @@ void _profiler_reset();
 void _profiler_get_results(char* buffer);
 void _profiler_dump_file(const char* filename);
 void _profiler_dump_console();
-void _profiler_strncpy(char* dst, const char* src, size_t size);
+void _profiler_node_setup(int id, const char* name);
 
 #define profiler_initialize()			_profiler_initialize()
 #define profiler_reset()				_profiler_reset()
@@ -96,8 +96,9 @@ static unsigned long get_milliseconds()
 struct profiler_node
 {
 	char name[PROFILER_NAME_MAXLEN];
-	int parent_id;
 	uint64_t total_cycles;
+	int parent_id;
+	char is_setup;
 };
 
 #ifdef PROFILER_DEFINE
@@ -133,7 +134,8 @@ void _profiler_reset()
 	{
 		profiler_nodes[i].total_cycles = 0;
 		profiler_nodes[i].parent_id = -1;
-		_profiler_strncpy(profiler_nodes[i].name, "", 1);
+		profiler_nodes[i].is_setup = 0;
+		strncpy(profiler_nodes[i].name, "", 1);
 	}
 }
 
@@ -207,9 +209,11 @@ void _profiler_dump_console()
 	printf("%s", buffer);
 }
 
-void _profiler_strncpy(char* dst, const char* src, size_t size)
+void _profiler_node_setup(int id, const char* name)
 {
-	strncpy(dst, src, size);
+	strncpy(profiler_nodes[id].name, name, strlen(name) + 1);
+	profiler_nodes[id].parent_id = profiler_current_parent;
+	profiler_nodes[id].is_setup = 1;
 }
 
 #ifdef _MSC_VER
@@ -236,8 +240,8 @@ extern profiler_node profiler_nodes[PROFILER_NODES_MAX];
 
 #define PROFILER_START(NAME) \
 	static int __profiler_id_##NAME = PROFILER_CREATE_ID; \
-	_profiler_strncpy(profiler_nodes[__profiler_id_##NAME].name, #NAME, strlen(#NAME)+1); \
-	profiler_nodes[__profiler_id_##NAME].parent_id = profiler_current_parent; \
+	if( !profiler_nodes[__profiler_id_##NAME].is_setup ) \
+		_profiler_node_setup( __profiler_id_##NAME, #NAME ); \
 	profiler_current_parent = __profiler_id_##NAME; \
 	uint64_t __profiler_start_##NAME = get_cycles(); \
 
