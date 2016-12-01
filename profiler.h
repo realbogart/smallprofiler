@@ -82,7 +82,12 @@ void _profiler_node_setup(int id, const char* name);
 
 #ifdef _WIN32
 #include <Windows.h>
+
+#ifdef __MINGW32__
+#include <x86intrin.h>
+#else
 #include <intrin.h>
+#endif
 static uint64_t get_cycles()
 {
 	return __rdtsc();
