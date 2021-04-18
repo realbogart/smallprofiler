@@ -25,19 +25,19 @@
 * Usage: 
 *
 *	#define PROFILER_DEFINE
-*	#include "profiler.h"
+*	#include "smallprofiler.h"
 *
 *	call profiler_initialize() on startup. This function will measure the performance
 *	of your cpu for PROFILER_MEASURE_MILLISECONDS milliseconds. This measurement is
 *	later used to convert the total cycle count to seconds.
 *
-*	Use PROFILER_START(name) to start the profiler and PROFILER_STOP(name) to stop.
+*	Use profiler_start(name) to start the profiler and profiler_stop(name) to stop.
 *	
 *	Several start/stop calls can be nestled and the time for all blocks with the
 *	same name are combined.
 *
 *	Call profiler_dump_file(const char* filename) to dump a performance log to file
-*	Call profiler_dump_console(const char* filename) to dump a performance log to console
+*	Call profiler_dump_console() to dump a performance log to console
 *
 *	You can define PROFILER_DISABLE to disable all macros and functions to remove
 *	all profiler overhead.
@@ -284,8 +284,8 @@ extern profiler_node profiler_nodes[PROFILER_NODES_MAX];
 #endif // PROFILER_DEFINE
 
 #ifdef PROFILER_DISABLE
-#define PROFILER_START(NAME)
-#define PROFILER_STOP(NAME)
+#define profiler_start(NAME)
+#define profiler_stop(NAME)
 #else
 
 #ifdef __cplusplus
@@ -294,14 +294,14 @@ extern profiler_node profiler_nodes[PROFILER_NODES_MAX];
 #define PROFILER_CREATE_ID __COUNTER__
 #endif
 
-#define PROFILER_START(NAME) \
+#define profiler_start(NAME) \
 	static int __profiler_id_##NAME = PROFILER_CREATE_ID; \
 	if( !profiler_nodes[__profiler_id_##NAME].is_setup ) \
 		_profiler_node_setup( __profiler_id_##NAME, #NAME ); \
 	profiler_current_parent = __profiler_id_##NAME; \
 	uint64_t __profiler_start_##NAME = get_cycles(); \
 
-#define PROFILER_STOP(NAME) \
+#define profiler_stop(NAME) \
 	profiler_nodes[__profiler_id_##NAME].total_cycles += get_cycles() - __profiler_start_##NAME; \
 	profiler_current_parent = profiler_nodes[__profiler_id_##NAME].parent_id; \
 
